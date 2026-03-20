@@ -1,33 +1,35 @@
 # DRIK Port Scanner
 
-DRIK is a simple Python-based port scanner used to find open ports on a target system.  
-It is designed for learning networking and basic cybersecurity concepts.
+DRIK is a Python-based multi-threaded port scanner used to identify open ports and running services on a target system.  
+It supports both TCP and basic UDP scanning and is designed for learning networking and cybersecurity concepts.
 
 ---
 
 ## Features
 
-- Scans TCP ports to find open ports
-- Multi-threaded scanning for better speed
+- Scans TCP ports to identify open ports
+- Basic UDP scanning for common ports
+- Multi-threaded scanning for faster performance
 - Supports IP address and hostname input
 - Multiple scan types:
   - Quick Scan (1–1000 ports)
   - Full Scan (1–65535 ports)
   - Custom port range
-- Detects common services (HTTP, SSH, etc.)
-- Shows scan progress
+- Detects common services (HTTP, SSH, DNS, etc.)
+- Displays real-time scan progress
 - Saves results to a file (drik_results.txt)
-- Displays total scan time
-- Handles errors properly
+- Shows total scan time
+- Animated banner using pyfiglet
+- Handles errors and interruptions properly
 
 ---
 
 ## Requirements
 
-python3
+- Python 3
 - Install required module:
-  
-  pip3 install pyfiglet
+
+pip install pyfiglet
 
 ---
 
@@ -35,8 +37,8 @@ python3
 
 python3 portscanner.py
 
-Then enter:
-- Target IP or hostname
+Then:
+- Enter target IP or hostname
 - Select scan type
 
 ---
@@ -45,7 +47,10 @@ Then enter:
 
 [TCP] 22 OPEN (ssh)  
 [TCP] 80 OPEN (http)  
-[TCP] 443 OPEN (https)
+[TCP] 443 OPEN (https)  
+
+[UDP] 53 OPEN (domain)  
+[UDP] 123 OPEN|FILTERED (ntp)
 
 ---
 
@@ -58,7 +63,7 @@ drik_results.txt
 
 ## Note
 
-This tool is for learning purposes only.  
+This tool is created for learning and educational purposes only.  
 Do not scan systems without permission.
 
 ---
