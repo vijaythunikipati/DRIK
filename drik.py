@@ -45,14 +45,16 @@ print("Scan started at :", datetime.now())
 print("-" * 60)
 
 # ---------------- GLOBALS ----------------
-open_ports = []
+open_tcp = []
+udp_results = []
+
 scanned = 0
 lock = Lock()
 
 start_time = datetime.now()
 
 # ---------------- TCP SCAN ----------------
-def scan_port(port):
+def tcp_scan(port):
     global scanned
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,7 +69,7 @@ def scan_port(port):
             except:
                 service = "unknown"
 
-            open_ports.append((port, service))
+            open_tcp.append((port, service))
             print(f"\n[TCP] {port:<5} OPEN ({service})")
 
     except:
@@ -82,19 +84,68 @@ def scan_port(port):
                 percent = (scanned / TOTAL_PORTS) * 100
                 print(f"\rProgress: {scanned}/{TOTAL_PORTS} ({percent:.1f}%)", end="")
 
-# ---------------- RUN SCAN ----------------
+# ---------------- UDP SCAN ----------------
+def udp_scan(port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(1)
+
+    try:
+        s.sendto(b"\x00", (target, port))
+        s.recvfrom(1024)
+
+        try:
+            service = socket.getservbyport(port, "udp")
+        except:
+            service = "unknown"
+
+        status = "OPEN"
+        print(f"\n[UDP] {port:<5} {status} ({service})")
+        udp_results.append((port, status, service))
+
+    except socket.timeout:
+        try:
+            service = socket.getservbyport(port, "udp")
+        except:
+            service = "unknown"
+
+        status = "OPEN|FILTERED"
+        print(f"\n[UDP] {port:<5} {status} ({service})")
+        udp_results.append((port, status, service))
+
+    except:
+        pass
+
+    finally:
+        s.close()
+
+# ---------------- RUN TCP SCAN ----------------
 try:
+    print("\n[+] Starting TCP Scan...\n")
+
     with ThreadPoolExecutor(max_workers=200) as executor:
-        executor.map(scan_port, ports)
+        executor.map(tcp_scan, ports)
 
 except KeyboardInterrupt:
     print("\nScan stopped by user")
     exit()
 
+# ---------------- RUN UDP SCAN ----------------
+print("\n\n[+] Starting UDP Scan (Common Ports)\n")
+
+udp_ports = [53, 67, 68, 69, 123, 161, 500, 514]
+
+with ThreadPoolExecutor(max_workers=30) as executor:
+    executor.map(udp_scan, udp_ports)
+
 # ---------------- SAVE RESULTS ----------------
 with open("drik_results.txt", "w") as f:
-    for port, service in open_ports:
+    f.write("---- TCP RESULTS ----\n")
+    for port, service in open_tcp:
         f.write(f"{port} OPEN ({service})\n")
+
+    f.write("\n---- UDP RESULTS ----\n")
+    for port, status, service in udp_results:
+        f.write(f"{port} {status} ({service})\n")
 
 # ---------------- SUMMARY ----------------
 end_time = datetime.now()
@@ -102,6 +153,8 @@ end_time = datetime.now()
 print("\n" + "-" * 60)
 print("Scan finished at :", end_time)
 print("Total time       :", end_time - start_time)
-print("Open ports       :", len(open_ports))
+print("Open TCP ports   :", len(open_tcp))
+print("UDP results      :", len(udp_results))
 print("Results saved to : drik_results.txt")
 print("-" * 60)
+
